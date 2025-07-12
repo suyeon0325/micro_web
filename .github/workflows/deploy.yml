@@ -1,36 +1,44 @@
-name: Build and Push to ECR
+name: Build and Push Multiple Services to ECR
 
 on:
   push:
     branches:
-      - main  # main 브랜치 푸시 시 실행
+      - main
 
 env:
-  AWS_REGION: ap-northeast-2
-  ECR_REPOSITORY: alicetest
-  IMAGE_TAG: latest
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  VERSION: ${{ github.sha }}
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        service: [service1, service2, service3, service4, service5, service6, service7, service8, service9, service10]
+
     steps:
-      - name: 체크아웃
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: AWS 로그인
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: ECR 로그인
-        id: login-ecr
+      - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Docker 이미지 빌드 및 푸시
+      - name: Build Docker Image
         run: |
-          IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-          docker build -t $IMAGE_URI ./service1
-          docker push $IMAGE_URI
+          IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ matrix.service }}
+          docker build -t $IMAGE_URI:${{ env.VERSION }} -t $IMAGE_URI:latest ./${{ matrix.service }}
+
+      - name: Push Docker Image
+        run: |
+          IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ matrix.service }}
+          docker push $IMAGE_URI:${{ env.VERSION }}
+          docker push $IMAGE_URI:latest
