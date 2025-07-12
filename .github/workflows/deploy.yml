@@ -32,5 +32,5 @@ jobs:
       - name: Docker 이미지 빌드 및 푸시
         run: |
           IMAGE_URI=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-          docker build -t $IMAGE_URI .
+          docker build -t $IMAGE_URI ./service1
           docker push $IMAGE_URI
