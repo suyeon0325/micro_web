@@ -1,0 +1,37 @@
+---
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: eks-alice
+  region: ap-northeast-2
+  version: "1.27"
+
+vpc:
+  id: "vpc-0becfaac3a121db38"   # VPC ID 지정
+  subnets:
+    private:
+      ap-northeast-2a:
+        id: "subnet-01f3e52c3d6d6a146"  # 프라이빗 서브넷 A
+      ap-northeast-2c:
+        id: "subnet-08676817d1df08616"  # 프라이빗 서브넷 C
+
+managedNodeGroups:
+  - name: alice-node-group  # 클러스터의 노드 그룹명
+    instanceType: t3.medium  # 클러스터 워커 노드의 인스턴스 타입
+    desiredCapacity: 2  # 클러스터 워커 노드의 갯수
+    volumeSize: 6  # 클러스터 워커 노드의 EBS 용량 (단위: GiB)
+    privateNetworking: true
+    subnets:
+      - subnet-01f3e52c3d6d6a146
+      - subnet-08676817d1df08616
+    iam:
+      withAddonPolicies:
+        imageBuilder: true  # Amazon ECR에 대한 권한 추가
+        albIngress: true  # ALB Ingress에 대한 권한 추가
+        cloudWatch: true  # CloudWatch에 대한 권한 추가
+        autoScaler: true  # Auto Scaling에 대한 권한 추가
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
